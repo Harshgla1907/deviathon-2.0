@@ -3,8 +3,8 @@ function Loading() {
     <div className="loading-state" role="status" aria-live="polite">
       <span className="spinner"></span>
       <div>
-        <strong>Analyzing safety conditions</strong>
-        <p>Fetching live data and calculating risk...</p>
+        <strong>Checking Mom’s health signals</strong>
+        <p>Combining vitals, medicines and recent notes...</p>
       </div>
     </div>
   )

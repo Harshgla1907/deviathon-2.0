@@ -7,7 +7,7 @@ export const seniors = [
   { id: 6, name: 'Mohan Singh', age: 84, initials: 'MS', score: 22, level: 'Stable', baseline: 'All personal baselines stable', vitals: 'BP 138/86 · stable', medicine: 'All doses recorded', signal: 'Normal activity', note: '“Sab theek hai, walk ki thi”', action: 'Routine monitoring', trend: [24, 23, 25, 22, 21, 23, 22], updated: '2 hrs ago' },
 ]
 
-export async function fetchCoordinatorData() {
+export async function fetchFamilyData() {
   await new Promise((resolve) => setTimeout(resolve, 700))
-  return seniors
+  return seniors[0]
 }

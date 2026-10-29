@@ -1,15 +1,15 @@
 # SafeHome AI
 
-Care Coordinator dashboard for the “AI-Powered Early Warning System for Seniors Living at Home” concept.
+Family user dashboard for the “AI-Powered Early Warning System for Seniors Living at Home” concept.
 
 ## Features
 
-- Sorted daily senior risk queue
+- Parent health status at a glance
 - Personal-baseline vitals comparison
-- Medicine miss patterns and daily health signals
+- Medicine miss patterns and daily wellbeing signals
+- Clear next-step checklist for the family
 - Explainable Hinglish call notes and recommended actions
-- Critical, High, Watch, and Stable filtering
-- Consent and coordinator-only privacy indicators
+- Safety messaging that does not provide diagnosis
 - Loading and API error/retry states
 - Responsive desktop and mobile layout
 
