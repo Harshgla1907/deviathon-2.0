@@ -1,72 +1,13 @@
-export const locations = [
-  { name: 'Delhi, India', latitude: 28.6139, longitude: 77.209 },
-  { name: 'Mumbai, India', latitude: 19.076, longitude: 72.8777 },
-  { name: 'Bengaluru, India', latitude: 12.9716, longitude: 77.5946 },
-  { name: 'Chennai, India', latitude: 13.0827, longitude: 80.2707 },
-  { name: 'Kolkata, India', latitude: 22.5726, longitude: 88.3639 },
+export const seniors = [
+  { id: 1, name: 'Kamla Devi', age: 78, initials: 'KD', score: 86, level: 'Critical', baseline: 'BP usually 142/88', vitals: 'BP 158/96 · +16 systolic', medicine: '6 of 7 days missed', signal: 'Food intake down 40%', note: '“Dawai bhool gayi, bhookh kam lagti hai”', action: 'Call today · Review medicine · Check food and hydration', trend: [35, 42, 48, 58, 62, 74, 86], updated: '12 min ago' },
+  { id: 2, name: 'Ramesh Gupta', age: 82, initials: 'RG', score: 74, level: 'High', baseline: 'Sleep usually 7 hrs', vitals: 'Sleep 4.2 hrs · 3-night trend', medicine: '2 of 3 doses missed', signal: 'Restlessness reported', note: '“Raat ko neend nahi aa rahi, kal bhi thoda ghabrahat”', action: 'Call this afternoon · Review sleep and medicines', trend: [38, 44, 51, 55, 60, 68, 74], updated: '28 min ago' },
+  { id: 3, name: 'Suman Joshi', age: 75, initials: 'SJ', score: 68, level: 'High', baseline: 'Normal glucose 118 mg/dL', vitals: 'Glucose 172 · +54 mg/dL', medicine: '1 of 7 days missed', signal: 'Skipped 2 meals', note: '“No pain, but no appetite today”', action: 'Call today · Confirm glucose reading · Arrange meal check', trend: [28, 34, 40, 46, 52, 61, 68], updated: '36 min ago' },
+  { id: 4, name: 'Harish Mehta', age: 81, initials: 'HM', score: 51, level: 'Watch', baseline: 'Steps usually 2,100/day', vitals: 'BP 146/90 · stable', medicine: 'All doses recorded', signal: 'Steps down 55%', note: '“No fall, back pain thoda badh gaya”', action: 'Follow up tomorrow · Ask about pain and activity', trend: [40, 42, 43, 47, 45, 49, 51], updated: '1 hr ago' },
+  { id: 5, name: 'Anita Kapoor', age: 79, initials: 'AK', score: 47, level: 'Watch', baseline: 'Usual mood: calm', vitals: 'BP 136/84 · stable', medicine: '0 of 7 days missed', signal: 'Contact declined twice', note: '“Akele feel kar rahi hoon, lekin koi dard nahi”', action: 'Schedule call · Check family support and wellbeing', trend: [30, 32, 38, 40, 44, 46, 47], updated: '1 hr ago' },
+  { id: 6, name: 'Mohan Singh', age: 84, initials: 'MS', score: 22, level: 'Stable', baseline: 'All personal baselines stable', vitals: 'BP 138/86 · stable', medicine: 'All doses recorded', signal: 'Normal activity', note: '“Sab theek hai, walk ki thi”', action: 'Routine monitoring', trend: [24, 23, 25, 22, 21, 23, 22], updated: '2 hrs ago' },
 ]
 
-export async function fetchSafetyData(location) {
-  const params = new URLSearchParams({
-    latitude: String(location.latitude),
-    longitude: String(location.longitude),
-    current: 'temperature_2m,relative_humidity_2m,apparent_temperature,precipitation,wind_speed_10m,weather_code',
-    hourly: 'precipitation_probability',
-    timezone: 'auto',
-    forecast_days: '1',
-  })
-
-  const response = await fetch(`https://api.open-meteo.com/v1/forecast?${params}`)
-  if (!response.ok) throw new Error(`Weather service returned ${response.status}`)
-
-  const data = await response.json()
-  return calculateSafetyData(location, data)
-}
-
-function weatherLabel(code) {
-  if (code === 0) return 'Clear sky'
-  if (code <= 3) return 'Partly cloudy'
-  if (code <= 48) return 'Foggy'
-  if (code <= 67) return 'Rainy'
-  if (code <= 77) return 'Snowy'
-  if (code <= 82) return 'Rain showers'
-  if (code <= 99) return 'Thunderstorm'
-  return 'Unknown'
-}
-
-function calculateSafetyData(location, data) {
-  const current = data.current
-  const temperature = current.temperature_2m
-  const humidity = current.relative_humidity_2m
-  const apparent = current.apparent_temperature
-  const wind = current.wind_speed_10m
-  const precipitation = current.precipitation
-  const weatherCode = current.weather_code
-
-  let score = 8
-  if (apparent >= 35 || apparent <= 7) score += 32
-  else if (apparent >= 30 || apparent <= 12) score += 18
-  if (humidity >= 85 || humidity <= 20) score += 15
-  else if (humidity >= 75) score += 8
-  if (wind >= 35) score += 20
-  else if (wind >= 25) score += 10
-  if (precipitation >= 4) score += 20
-  else if (precipitation > 0) score += 10
-  if ([95, 96, 99].includes(weatherCode)) score += 20
-
-  score = Math.min(score, 100)
-  const status = score >= 55 ? 'High' : score >= 30 ? 'Medium' : 'Low'
-
-  return {
-    location: location.name,
-    temperature: Math.round(temperature),
-    apparent: Math.round(apparent),
-    humidity,
-    wind: Math.round(wind),
-    precipitation,
-    weather: weatherLabel(weatherCode),
-    status,
-    score,
-    updatedAt: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-  }
+export async function fetchCoordinatorData() {
+  await new Promise((resolve) => setTimeout(resolve, 700))
+  return seniors
 }

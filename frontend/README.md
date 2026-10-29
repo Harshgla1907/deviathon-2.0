@@ -1,13 +1,15 @@
 # SafeHome AI
 
-React dashboard for the “AI-Powered Early Warning System for Seniors Living at Home” concept.
+Care Coordinator dashboard for the “AI-Powered Early Warning System for Seniors Living at Home” concept.
 
 ## Features
 
-- Live environment data from the Open-Meteo public API
-- Low, Medium, and High senior safety risk status
-- City/location selector
-- Temperature, humidity, wind, and precipitation cards
+- Sorted daily senior risk queue
+- Personal-baseline vitals comparison
+- Medicine miss patterns and daily health signals
+- Explainable Hinglish call notes and recommended actions
+- Critical, High, Watch, and Stable filtering
+- Consent and coordinator-only privacy indicators
 - Loading and API error/retry states
 - Responsive desktop and mobile layout
 

@@ -1,23 +1,25 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import Navbar from './components/Navbar'
-import RiskCard from './components/RiskCard'
 import Loading from './components/Loading'
-import { fetchSafetyData, locations } from './services/api'
+import { fetchCoordinatorData } from './services/api'
 import './App.css'
 
 function App() {
-  const [selectedLocation, setSelectedLocation] = useState(locations[0])
-  const [data, setData] = useState(null)
+  const [seniors, setSeniors] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const [filter, setFilter] = useState('All')
+  const [selectedId, setSelectedId] = useState(1)
 
-  const loadData = async (location = selectedLocation) => {
+  const loadData = async () => {
     setLoading(true)
     setError('')
     try {
-      setData(await fetchSafetyData(location))
+      const result = await fetchCoordinatorData()
+      setSeniors(result)
+      setSelectedId(result[0]?.id ?? null)
     } catch (err) {
-      setError(err.message || 'Unable to load safety data. Please try again.')
+      setError(err.message || 'Unable to load care coordination data.')
     } finally {
       setLoading(false)
     }
@@ -26,9 +28,9 @@ function App() {
   useEffect(() => {
     const loadInitialData = async () => {
       try {
-        setData(await fetchSafetyData(locations[0]))
+        setSeniors(await fetchCoordinatorData())
       } catch (err) {
-        setError(err.message || 'Unable to load safety data. Please try again.')
+        setError(err.message || 'Unable to load care coordination data.')
       } finally {
         setLoading(false)
       }
@@ -37,121 +39,134 @@ function App() {
     loadInitialData()
   }, [])
 
-  const selectLocation = (event) => {
-    const location = locations.find((item) => item.name === event.target.value)
-    setSelectedLocation(location)
-    loadData(location)
-  }
+  const sortedSeniors = useMemo(
+    () => [...seniors].sort((a, b) => b.score - a.score),
+    [seniors],
+  )
 
-  const metricCards = data ? [
-    { label: 'Temperature', value: `${data.temperature}°C`, note: `Feels like ${data.apparent}°C`, icon: '🌡️' },
-    { label: 'Humidity', value: `${data.humidity}%`, note: data.humidity > 75 ? 'High moisture' : 'Comfortable range', icon: '💧' },
-    { label: 'Wind speed', value: `${data.wind} km/h`, note: data.wind >= 25 ? 'Strong winds' : 'Calm conditions', icon: '≋' },
-    { label: 'Precipitation', value: `${data.precipitation} mm`, note: data.weather, icon: '☂' },
-  ] : []
+  const visibleSeniors = filter === 'All'
+    ? sortedSeniors
+    : sortedSeniors.filter((senior) => senior.level === filter)
 
-  const riskSubtitle = {
-    Low: 'Conditions are safe. Continue normal indoor monitoring.',
-    Medium: 'Stay alert. Check the senior and review environmental conditions.',
-    High: 'Immediate attention recommended. Take preventive safety action.',
-  }
+  const selected = sortedSeniors.find((senior) => senior.id === selectedId) ?? sortedSeniors[0]
+  const criticalCount = seniors.filter((senior) => senior.level === 'Critical' || senior.level === 'High').length
+  const watchCount = seniors.filter((senior) => senior.level === 'Watch').length
+  const stableCount = seniors.filter((senior) => senior.level === 'Stable').length
 
   return (
     <div className="app-shell">
       <Navbar />
       <main>
-        <header className="page-header">
+        <header className="page-header coordinator-header">
           <div>
-            <p className="breadcrumb">Dashboard <span>/</span> Home Overview</p>
-            <h1>Good morning, Rajesh</h1>
-            <p>Here is your parent’s safety overview.</p>
+            <p className="breadcrumb">Care Coordination <span>/</span> Daily priorities</p>
+            <h1>Good morning, Ananya</h1>
+            <p>Review changes across vitals, medicines and call notes.</p>
           </div>
-          <button className="refresh-button" onClick={() => loadData()} disabled={loading}>
-            <span aria-hidden="true">↻</span> Refresh data
+          <button className="refresh-button" onClick={loadData} disabled={loading}>
+            <span aria-hidden="true">↻</span> Refresh
           </button>
         </header>
 
-        <section className="location-panel">
-          <label htmlFor="location">Monitoring location</label>
-          <div className="location-select">
-            <span aria-hidden="true">⌖</span>
-            <select id="location" value={selectedLocation.name} onChange={selectLocation}>
-              {locations.map((location) => (
-                <option key={location.name} value={location.name}>{location.name}</option>
-              ))}
-            </select>
-          </div>
+        <section className="summary-grid" aria-label="Care summary">
+          <article><span className="summary-icon high">!</span><div><strong>{criticalCount}</strong><p>Need attention</p></div></article>
+          <article><span className="summary-icon watch">◷</span><div><strong>{watchCount}</strong><p>Monitor closely</p></div></article>
+          <article><span className="summary-icon stable">✓</span><div><strong>{stableCount}</strong><p>Stable today</p></div></article>
+          <article><span className="summary-icon families">12</span><div><strong>12</strong><p>Families monitored</p></div></article>
         </section>
 
         {loading && <Loading />}
 
         {error && (
           <div className="error-state" role="alert">
-            <div><strong>Could not load live data</strong><p>{error}</p></div>
-            <button onClick={() => loadData()} disabled={loading}>Try again</button>
+            <div><strong>Could not load coordinator data</strong><p>{error}</p></div>
+            <button onClick={loadData}>Try again</button>
           </div>
         )}
 
-        {!loading && !error && data && (
-          <>
-            <div className="dashboard-grid">
-              <RiskCard status={data.status} score={data.score} subtitle={riskSubtitle[data.status]} />
-              <section className="activity-card">
-                <div className="card-heading">
-                  <div>
-                    <span className="eyebrow">Today’s monitoring</span>
-                    <h2>Activity summary</h2>
-                  </div>
-                  <span className="updated">Updated {data.updatedAt}</span>
-                </div>
-                <div className="activity-row">
-                  <span className="activity-icon">◉</span>
-                  <div><strong>12:40 PM</strong><p>Indoor movement detected</p></div>
-                  <span className="normal-badge">Normal</span>
-                </div>
-                <div className="activity-row">
-                  <span className="activity-icon medicine">✓</span>
-                  <div><strong>10:30 AM</strong><p>Medicine reminder completed</p></div>
-                  <span className="normal-badge">On time</span>
-                </div>
-                <button className="view-all">View activity history <span>→</span></button>
-              </section>
-            </div>
-
-            <section className="metrics-section">
-              <div className="section-heading">
+        {!loading && !error && (
+          <div className="coordinator-grid">
+            <section className="priority-panel">
+              <div className="panel-heading">
                 <div>
-                  <span className="eyebrow">Live environment</span>
-                  <h2>Safety metrics</h2>
+                  <span className="eyebrow">Sorted by personal risk</span>
+                  <h2>Today’s priority list</h2>
                 </div>
-                <span className="location-chip">⌖ {data.location}</span>
+                <span className="today-date">29 Oct</span>
               </div>
-              <div className="metrics-grid">
-                {metricCards.map((metric) => (
-                  <article className="metric-card" key={metric.label}>
-                    <span className="metric-icon">{metric.icon}</span>
-                    <div>
-                      <p>{metric.label}</p>
-                      <strong>{metric.value}</strong>
-                      <small>{metric.note}</small>
-                    </div>
-                  </article>
+
+              <div className="filter-tabs" aria-label="Filter seniors">
+                {['All', 'Critical', 'High', 'Watch', 'Stable'].map((item) => (
+                  <button
+                    key={item}
+                    className={filter === item ? 'active' : ''}
+                    onClick={() => setFilter(item)}
+                  >
+                    {item}
+                  </button>
+                ))}
+              </div>
+
+              <div className="senior-list">
+                {visibleSeniors.map((senior) => (
+                  <button
+                    type="button"
+                    className={`senior-row ${selected?.id === senior.id ? 'selected' : ''}`}
+                    key={senior.id}
+                    onClick={() => setSelectedId(senior.id)}
+                  >
+                    <span className={`avatar avatar-${senior.level.toLowerCase()}`}>{senior.initials}</span>
+                    <span className="senior-main">
+                      <strong>{senior.name}</strong>
+                      <small>{senior.age} years · Updated {senior.updated}</small>
+                    </span>
+                    <span className="risk-column">
+                      <strong>{senior.score}</strong>
+                      <small className={`level-${senior.level.toLowerCase()}`}>{senior.level}</small>
+                    </span>
+                  </button>
                 ))}
               </div>
             </section>
 
-            <section className="recommendation">
-              <span className="recommendation-icon">♡</span>
-              <div>
-                <span className="eyebrow">AI recommendation</span>
-                <p>{data.status === 'High'
-                  ? 'Check on your loved one now and ensure the home environment is safe.'
-                  : data.status === 'Medium'
-                    ? 'Monitor the current conditions and keep emergency contacts available.'
-                    : 'All monitored conditions are within a safe range. Keep regular check-ins.'}</p>
-              </div>
-            </section>
-          </>
+            {selected && (
+              <aside className="detail-panel">
+                <div className="detail-header">
+                  <div>
+                    <span className="eyebrow">Highest priority</span>
+                    <h2>{selected.name}</h2>
+                    <p>{selected.age} years · Personal baseline monitored</p>
+                  </div>
+                  <div className={`score-ring score-${selected.level.toLowerCase()}`}>
+                    <strong>{selected.score}</strong>
+                    <span>/100</span>
+                  </div>
+                </div>
+
+                <section className="signal-section">
+                  <h3>Why this is flagged</h3>
+                  <div className="signal-grid">
+                    <article><span>Vitals</span><strong>{selected.vitals}</strong><small>Compared with {selected.baseline}</small></article>
+                    <article><span>Medicines</span><strong>{selected.medicine}</strong><small>Pattern across the last 7 days</small></article>
+                    <article><span>Daily signal</span><strong>{selected.signal}</strong><small>Observed change, not diagnosis</small></article>
+                  </div>
+                </section>
+
+                <section className="note-section">
+                  <div className="section-label"><span>Call note</span><small>Hinglish cue detected</small></div>
+                  <blockquote>{selected.note}</blockquote>
+                </section>
+
+                <section className="action-section">
+                  <span className="action-icon">→</span>
+                  <div><small>Recommended next action</small><strong>{selected.action}</strong></div>
+                </section>
+
+                <button className="call-button">Start care call <span>→</span></button>
+                <p className="privacy-note">🔒 Consent on · Coordinator-only view · No diagnosis generated</p>
+              </aside>
+            )}
+          </div>
         )}
       </main>
     </div>

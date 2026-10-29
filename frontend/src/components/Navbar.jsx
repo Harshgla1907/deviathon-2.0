@@ -10,15 +10,15 @@ function Navbar() {
         </div>
         <div>
           <strong>SafeHome AI</strong>
-          <span>Senior Care Monitoring</span>
+          <span>Care Coordination</span>
         </div>
       </div>
       <div className="nav-status">
         <span className="live-dot"></span>
         System Online
       </div>
-      <button className="profile-button" aria-label="Open caregiver profile">
-        <span>RK</span>
+      <button className="profile-button" aria-label="Open coordinator profile">
+        <span>AC</span>
       </button>
     </nav>
   )
